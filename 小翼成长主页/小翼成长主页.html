@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Breaking学员成长仪表盘</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入Chart.js库，用于自动生成雷达图 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Noto Sans SC', sans-serif; }
+        h1, h2, h3 { font-family: 'Ma Shan Zheng', cursive; }
+        .background-container {
+            /* === 背景图已改为调用本地文件，确保100%显示 === */
+            /* === 它会自动寻找与本网页在同一个文件夹下的 background.jpg 文件 === */
+            background-image: url('background.jpg');
+            
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        .content-card {
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+    </style>
+</head>
+<body class="background-container min-h-screen p-4 md:p-8 flex items-center justify-center">
+
+    <!-- ====================================================================== -->
+    <!--                  【唯一的修改区域】请在这里填写所有信息                   -->
+    <!-- ====================================================================== -->
+    <script>
+        const studentData = {
+            // --- 基础信息 ---
+            studentName: "小翼同学",
+            studentPhotoFile: "photo.png", // 请填写您放入文件夹中的学员照片的文件名
+            studentId: "BK001",
+            birthDate: "2015-10-10",
+            enrollDate: "2024-03-01",
+            contactPerson: "杨先生",
+            contactPhone: "139****5678",
+            notes: "手腕力量偏弱，需多加关注",
+
+            // --- 致家长的一封信 ---
+            letterToParents: `尊敬的家长：您好！欢迎您的孩子加入黑山羊街舞俱乐部，开启一段充满力量与技巧的Breaking舞蹈旅程！我们深知，您不仅仅是为孩子选择了一个兴趣班，更是为他/她选择了一种挑战自我、磨练意志的体育艺术。在本俱乐部，我们的教学核心是系统性地为您的孩子打造坚实的Breaking基础，包括Toprock的律动、Footwork的流畅和Freezes的稳定。这本《学员手册》是我们精心为您和孩子设计的“成长地图”。感谢您的信任与支持，让我们一同见证孩子在汗水与音乐中，成长为更自信、更坚强的B-Boy/B-Girl！`,
+
+            // --- 学习之旅地图与阶段性评估 (Breaking版) ---
+            learningJourney: [
+                {
+                    id: "stage1",
+                    title: "第一阶段 (1-6课)",
+                    subtitle: "启蒙与基础建立",
+                    description: "熟悉Breaking音乐节奏，掌握基础律动，学习基础Toprock动作(Two Step)，并进行6-Step的路径认知与初步尝试，建立手腕保护等核心安全意识。",
+                    scores: [8, 7, 6, 7, 9], // 第6课评估分数: [Toprock, Footwork, Freezes, 身体能力, 课堂表现]
+                    color: "blue"
+                },
+                {
+                    id: "stage2",
+                    title: "第二阶段 (7-12课)",
+                    subtitle: "基础动作掌握与连接",
+                    description: "熟练掌握6-Step基础路径，学习新的Toprock动作(Indian Step)，并首次挑战核心Freeze动作(Baby Freeze)的入门与平衡。",
+                    scores: [0, 0, 0, 0, 0], // 第12课评估分数
+                    color: "green"
+                },
+                {
+                    id: "stage3",
+                    title: "第三阶段 (13-18课)",
+                    subtitle: "基础巩固与变化初探",
+                    description: "引入Go-Downs(下地转换)技巧，学习Footwork变奏(3-Step/CC)，并掌握新的Freeze动作(Chair Freeze)，开始探索动作间的连接。",
+                    scores: [0, 0, 0, 0, 0], // 第18课评估分数
+                    color: "yellow"
+                },
+                {
+                    id: "stage4",
+                    title: "第四阶段 (19-24课)",
+                    subtitle: "巩固、连接与初步应用",
+                    description: "综合复习所有基础，练习Footwork到Freeze的连接，并初步体验Freestyle和Cypher文化，建立即兴表达的自信。",
+                    scores: [0, 0, 0, 0, 0], // 第24课评估分数
+                    color: "red"
+                }
+            ],
+
+            // --- 作业与反馈 ---
+            homework: `1. 请对着镜子，练习Two Step接Indian Step的Toprock连接，练习20次。<br>
+                       2. 在地面上，慢速、清晰地完成5组完整的6-Step路径练习。<br>
+                       3. 在有保护的情况下，练习Baby Freeze的准备姿势，尝试保持平衡3秒钟，练习10次。`,
+            formLink: "https://jsj.top/f/jC5DOf",
+            
+            // --- 详细能力分解 ---
+            skills: [
+                { name: "Toprock: Two Step", mastered: true },
+                { name: "Footwork: 6-Step 路径", mastered: true },
+                { name: "Freeze: Baby Freeze", mastered: false },
+                { name: "Toprock: Indian Step", mastered: false }
+            ],
+            coachComments: "小翼同学本阶段在Toprock的律动感上进步很大，能够跟上音乐！6-Step的路径也清晰了很多。接下来我们的重点是加强手腕和核心力量，为更稳定的Freeze做准备，加油！",
+            
+            // --- 出勤记录 (true代表出勤, false代表缺勤) ---
+            attendance: [
+                true, true, true, false, true, true, // 1-6课
+                true, true, true, true, true, true,  // 7-12课
+                true, true, true, true, true, true,  // 13-18课
+                true, true, true, true, true, true   // 19-24课
+            ]
+        };
+    </script>
+    <!-- ====================================================================== -->
+    <!--                         【修改区域结束】                               -->
+    <!-- ====================================================================== -->
+
+
+    <div id="dashboard" class="w-full max-w-4xl content-card rounded-2xl shadow-2xl p-6 md:p-10 mx-auto hidden">
+        
+        <!-- 第一部分：学员档案 -->
+        <header class="flex flex-col md:flex-row items-center mb-10">
+            <div class="w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden shadow-lg mb-4 md:mb-0 md:mr-8 flex-shrink-0 border-4 border-white">
+                <img id="studentPhoto" src="" alt="学员照片" class="w-full h-full object-cover">
+            </div>
+            <div class="text-center md:text-left">
+                <h1 id="studentName" class="text-4xl md:text-5xl font-bold text-gray-800"></h1>
+                <p class="text-lg text-gray-600 mt-2 font-sans">黑山羊街舞俱乐部 | Breaking 入门级</p>
+            </div>
+        </header>
+
+        <div class="mb-10 bg-gray-50/70 rounded-xl p-6 shadow-inner">
+            <h2 class="text-3xl font-semibold text-gray-700 mb-4">学员资料卡</h2>
+            <div id="studentInfoCard" class="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-4 text-sm font-sans"></div>
+        </div>
+
+        <div class="mb-10 bg-gray-50/70 rounded-xl p-4 shadow-inner">
+            <button onclick="toggleAccordion('letterContent')" class="w-full text-left text-xl font-semibold text-gray-700 flex justify-between items-center">
+                致家长的一封信
+                <svg id="arrow-letterContent" class="w-5 h-5 transition-transform transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+            </button>
+            <div id="letterContent" class="accordion-content mt-2 text-gray-600 font-sans">
+                <p id="letterText" class="pt-4 border-t border-gray-200"></p>
+            </div>
+        </div>
+
+        <!-- 第二部分：学习之旅与阶段性能力评估 -->
+        <div class="mb-12">
+            <h2 class="text-4xl font-bold text-gray-800 mb-6 text-center">我的学习之旅地图</h2>
+            <div id="learningJourneyContainer" class="space-y-4 font-sans">
+                <!-- 学习之旅地图将由脚本自动生成并插入到这里 -->
+            </div>
+        </div>
+
+        <!-- 第三部分：课后作业与练习反馈 -->
+        <div class="mb-12">
+            <h2 class="text-4xl font-bold text-gray-800 mb-6 text-center">课后作业与练习反馈</h2>
+            <div class="bg-amber-50/70 rounded-xl p-6 shadow-inner">
+                <div class="mb-6">
+                    <h3 class="text-2xl font-semibold text-amber-800 mb-3">本周练习任务</h3>
+                    <p id="homework" class="text-gray-700 font-sans"></p>
+                </div>
+                <div class="text-center">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-3 font-sans">完成作业后，请提交视频链接</h3>
+                    <a id="formLink" href="" target="_blank" class="inline-block bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-transform transform hover:scale-105">
+                        点击这里提交作业视频
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 第四部分：详细能力分解 -->
+        <main class="font-sans">
+            <h2 class="text-4xl font-bold text-gray-800 mb-6 text-center">详细能力分解</h2>
+            <div class="grid md:grid-cols-2 gap-8 mb-8">
+                <div class="bg-emerald-50/70 rounded-xl p-6 shadow-sm">
+                    <h3 class="text-2xl font-semibold text-emerald-800 mb-4">本阶段核心技术清单</h3>
+                    <ul id="skillsList" class="space-y-2 text-gray-700"></ul>
+                </div>
+                <div class="bg-sky-50/70 rounded-xl p-6 shadow-sm">
+                    <h3 class="text-2xl font-semibold text-sky-800 mb-3">教练的悄悄话</h3>
+                    <p id="coachComments" class="text-gray-600"></p>
+                </div>
+            </div>
+            <div class="mb-8">
+                <h3 class="text-2xl font-semibold text-gray-700 mb-4">历次评估详情</h3>
+                <div class="overflow-x-auto bg-white rounded-lg shadow">
+                    <table class="min-w-full text-sm text-left text-gray-500">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-100">
+                            <tr>
+                                <th scope="col" class="px-6 py-3">评估周期</th>
+                                <th scope="col" class="px-6 py-3">Toprock</th>
+                                <th scope="col" class="px-6 py-3">Footwork</th>
+                                <th scope="col" class="px-6 py-3">Freezes</th>
+                                <th scope="col" class="px-6 py-3">身体能力</th>
+                                <th scope="col" class="px-6 py-3">课堂表现</th>
+                                <th scope="col" class="px-6 py-3">总评</th>
+                            </tr>
+                        </thead>
+                        <tbody id="assessmentTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div>
+                 <h3 class="text-2xl font-semibold text-gray-700 mb-4">出勤记录</h3>
+                 <div id="attendanceGrid" class="grid grid-cols-6 gap-2"></div>
+            </div>
+        </main>
+
+        <footer class="text-center mt-12 text-gray-400 text-sm">
+            <p>&copy; 2024 黑山羊街舞俱乐部. All Rights Reserved.</p>
+        </footer>
+    </div>
+
+    <!-- ====================================================================== -->
+    <!--                  【自动渲染脚本】请不要修改以下内容                     -->
+    <!-- ====================================================================== -->
+    <script>
+        // --- 渲染函数 ---
+        function renderDashboard(data) {
+            // 1. 基础信息
+            document.getElementById('studentName').textContent = data.studentName + "的成长仪表盘";
+            if (data.studentPhotoFile) {
+                document.getElementById('studentPhoto').src = data.studentPhotoFile;
+            } else {
+                document.getElementById('studentPhoto').src = `https://placehold.co/128x128/60a5fa/ffffff?text=${data.studentName.charAt(0)}`;
+            }
+            
+            const infoCard = document.getElementById('studentInfoCard');
+            infoCard.innerHTML = `
+                <div class="text-gray-600"><span class="font-semibold text-gray-800">学员编号:</span> ${data.studentId}</div>
+                <div class="text-gray-600"><span class="font-semibold text-gray-800">出生日期:</span> ${data.birthDate}</div>
+                <div class="text-gray-600"><span class="font-semibold text-gray-800">入学日期:</span> ${data.enrollDate}</div>
+                <div class="text-gray-600"><span class="font-semibold text-gray-800">紧急联系人:</span> ${data.contactPerson}</div>
+                <div class="text-gray-600"><span class="font-semibold text-gray-800">联系电话:</span> ${data.contactPhone}</div>
+                <div class="text-gray-600"><span class="font-semibold text-gray-800">过敏/备注:</span> ${data.notes}</div>
+            `;
+            
+            document.getElementById('letterText').textContent = data.letterToParents;
+
+            // 2. 作业与反馈
+            document.getElementById('homework').innerHTML = data.homework;
+            document.getElementById('formLink').href = data.formLink;
+
+            // 3. 详细能力分解
+            const skillsList = document.getElementById('skillsList');
+            skillsList.innerHTML = '';
+            data.skills.forEach(skill => {
+                const li = document.createElement('li');
+                li.className = `flex items-center ${skill.mastered ? 'line-through' : ''}`;
+                li.innerHTML = `
+                    <svg class="w-5 h-5 mr-2 ${skill.mastered ? 'text-emerald-500' : 'text-gray-400'}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="${skill.mastered ? 'M4.5 12.75l6 6 9-13.5' : 'M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z'}" />
+                    </svg>
+                    ${skill.name}
+                `;
+                skillsList.appendChild(li);
+            });
+            document.getElementById('coachComments').textContent = data.coachComments;
+            
+            // 4. 历次评估详情表格
+            const tableBody = document.getElementById('assessmentTableBody');
+            tableBody.innerHTML = '';
+            const tableHead = document.querySelector('#assessmentTableBody').parentElement.querySelector('thead');
+            const newHeadings = ['评估周期', 'Toprock', 'Footwork', 'Freezes', '身体能力', '课堂表现', '总评'];
+            tableHead.querySelector('tr').innerHTML = newHeadings.map(h => `<th scope="col" class="px-6 py-3">${h}</th>`).join('');
+
+            data.learningJourney.forEach((stage, index) => {
+                const scores = stage.scores;
+                const total = scores.reduce((a, b) => a + b, 0);
+                const row = document.createElement('tr');
+                row.className = index % 2 === 0 ? 'bg-white border-b' : 'bg-gray-50 border-b';
+                row.innerHTML = `
+                    <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">第${(index + 1) * 6}课评估</th>
+                    ${scores.map(score => `<td class="px-6 py-4">${score}</td>`).join('')}
+                    <td class="px-6 py-4 font-bold text-gray-800">${total}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+
+            // 5. 出勤记录
+            const attendanceGrid = document.getElementById('attendanceGrid');
+            attendanceGrid.innerHTML = '';
+            data.attendance.forEach((present, index) => {
+                const cell = document.createElement('div');
+                cell.className = `w-full h-12 flex items-center justify-center rounded-lg font-bold ${present ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-500'}`;
+                cell.textContent = index + 1;
+                attendanceGrid.appendChild(cell);
+            });
+            
+            // --- 学习之旅地图与雷达图生成 ---
+            const journeyContainer = document.getElementById('learningJourneyContainer');
+            journeyContainer.innerHTML = '';
+            const chartLabels = ['Toprock', 'Footwork', 'Freezes', '身体能力', '课堂表现'];
+            const chartOptions = {
+                scales: { r: { angleLines: { display: true }, suggestedMin: 0, suggestedMax: 10, pointLabels: { font: { size: 14, family: "'Noto Sans SC', sans-serif" } }, ticks: { backdropColor: 'rgba(255,255,255,0.7)' } } },
+                plugins: { legend: { display: false } }
+            };
+
+            const bgColors = {
+                blue: 'rgba(59, 130, 246, 0.2)',
+                green: 'rgba(34, 197, 94, 0.2)',
+                yellow: 'rgba(234, 179, 8, 0.2)',
+                red: 'rgba(239, 68, 68, 0.2)'
+            };
+            const borderColors = {
+                blue: 'rgb(59, 130, 246)',
+                green: 'rgb(34, 197, 94)',
+                yellow: 'rgb(234, 179, 8)',
+                red: 'rgb(239, 68, 68)'
+            };
+
+            data.learningJourney.forEach((stage, index) => {
+                const stageHtml = `
+                    <div class="border rounded-lg shadow-sm">
+                        <button onclick="toggleAccordion('${stage.id}')" class="w-full text-left font-semibold text-gray-700 flex justify-between items-center p-4 bg-${stage.color}-100 hover:bg-${stage.color}-200 transition-colors rounded-t-lg">
+                            <span class="text-lg">${stage.title}: ${stage.subtitle}</span>
+                            <svg id="arrow-${stage.id}" class="w-5 h-5 transition-transform transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                        </button>
+                        <div id="${stage.id}" class="accordion-content bg-white p-4 rounded-b-lg">
+                            <p class="text-gray-600 mb-4"><strong>阶段目标:</strong> ${stage.description}</p>
+                            <div class="bg-gray-50/70 rounded-xl p-4 md:p-6 shadow-inner">
+                                <h3 class="text-2xl font-bold text-gray-800 mb-4 text-center">第${(index + 1) * 6}课评估 - 雷达图</h3>
+                                <div class="w-full flex items-center justify-center">
+                                    <canvas id="radarChart${index + 1}"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                journeyContainer.innerHTML += stageHtml;
+            });
+
+            // 延迟图表渲染，确保DOM元素已创建
+            setTimeout(() => {
+                data.learningJourney.forEach((stage, index) => {
+                    new Chart(document.getElementById(`radarChart${index + 1}`), {
+                        type: 'radar',
+                        data: { 
+                            labels: chartLabels, 
+                            datasets: [{ 
+                                label: `第${(index + 1) * 6}课评估`, 
+                                data: stage.scores, 
+                                fill: true, 
+                                backgroundColor: bgColors[stage.color], 
+                                borderColor: borderColors[stage.color], 
+                                pointBackgroundColor: borderColors[stage.color] 
+                            }] 
+                        },
+                        options: chartOptions
+                    });
+                });
+            }, 0);
+
+
+            // 最后显示整个仪表盘
+            document.getElementById('dashboard').classList.remove('hidden');
+        }
+
+        // --- 页面加载时自动执行 ---
+        window.onload = function() {
+            renderDashboard(studentData);
+        };
+
+        // --- 折叠菜单函数 (已优化) ---
+        function toggleAccordion(id) {
+            const content = document.getElementById(id);
+            const arrow = document.getElementById('arrow-' + id);
+            if (content.style.maxHeight) {
+                content.style.maxHeight = null;
+                arrow.style.transform = 'rotate(0deg)';
+            } else {
+                content.style.maxHeight = content.scrollHeight + "px";
+                arrow.style.transform = 'rotate(180deg)';
+            }
+        }
+    </script>
+</body>
+</html>
